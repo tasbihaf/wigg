@@ -13,12 +13,15 @@
       --text: #2b2b2b;
       --muted: #6b7280;
 
-      --accent: #ff6fae;      /* top header */
-      --accent-2: #ff8fbe;    /* hover */
-      --on-accent: #ffffff;
+      /* ✅ more pastel pink header */
+      --accent: #f7c6d9;      /* header background (pastel pink) */
+      --accent-2: #f3b8d0;    /* hover for dates (slightly deeper pastel) */
+
+      /* ✅ brown/white text accents */
+      --header-text: #6b3f2a; /* brown */
+      --on-accent: #ffffff;   /* white */
 
       --outside-month: 0.25;
-
       --radius: 16px;
     }
 
@@ -35,7 +38,7 @@
       width: 100%;
       display: flex;
       justify-content: center;
-      padding: 8px;
+      padding: 6px; /* slightly tighter */
     }
 
     table{
@@ -46,62 +49,61 @@
       border-radius: var(--radius);
       overflow: hidden;
       position: relative;
-
-      /* ✅ removed shadow */
       box-shadow: none;
     }
 
     td, th{
       text-align: center;
       background: var(--surface);
-      border: none; /* ✅ no lines */
+      border: none;
     }
 
-    /* Month + year header */
+    /* ✅ Month + year header */
     tr:first-child th{
       font-size: 18px;
       font-weight: 700;
-      padding: 14px 44px;
+      padding: 12px 40px;   /* tighter */
       background: var(--accent);
-      color: var(--on-accent);
+      color: var(--header-text); /* ✅ brown */
+      position: relative;
     }
 
-    /* ✅ year beside month */
+    /* year beside month */
     .any{
       display: inline;
       font-size: 18px;
       font-weight: 700;
       margin-left: 8px;
-      opacity: 0.95;
-      color: var(--on-accent);
+      color: var(--on-accent); /* ✅ white */
     }
 
-    /* Day-of-week row: ✅ no pink background, no borders/lines */
+    /* ✅ Day-of-week row: no background bar */
     tr:nth-child(2) th{
-      padding: 10px 0;
+      padding: 6px 0;        /* tighter */
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.06em;
-      background: var(--surface);     /* ✅ removed background */
+      background: var(--surface);
       color: var(--muted);
     }
 
     td{
       padding: 0;
-      border: none; /* ✅ no row lines */
+      border: none;
     }
 
+    /* ✅ tighter row spacing */
     td > span{
       display: block;
-      padding: 12px 0;
+      padding: 8px 0;        /* was 12px */
       color: var(--text);
-      border: 2px solid transparent;
+      border: 1px solid transparent;
       border-radius: 10px;
-      margin: 4px;
+      margin: 2px;           /* was 4px */
       transition: background 0.15s ease, color 0.15s ease, transform 0.05s ease;
+      line-height: 1;        /* reduces vertical looseness */
     }
 
-    /* ✅ remove alternating cell background to keep it super clean */
     td:nth-child(even) > span{
       background: transparent;
     }
@@ -109,7 +111,7 @@
     /* Today */
     td.avui > span{
       background: var(--accent);
-      color: var(--on-accent);
+      color: var(--header-text); /* ✅ brown on pastel */
       font-weight: 800;
     }
 
@@ -120,38 +122,40 @@
 
     td > span:hover{
       background: var(--accent-2);
-      color: var(--on-accent);
+      color: var(--header-text);
       cursor: pointer;
     }
     td > span:active{
       transform: scale(0.98);
     }
 
-    /* Nav buttons */
+    /* ✅ Nav buttons: remove circles/pills entirely */
     .boto-next, .boto-prev{
-      background: rgba(255,255,255,0.22);
-      color: var(--on-accent);
+      background: transparent;      /* ✅ no circle */
+      color: var(--header-text);    /* ✅ brown arrows */
       border: none;
       font-family: inherit;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 900;
-      height: 30px;
-      width: 30px;
-      border-radius: 999px;
+      height: auto;
+      width: auto;
+      border-radius: 0;
       position: absolute;
-      top: 12px;
-      display: grid;
-      place-items: center;
-      transition: background 0.15s ease;
+      top: 10px;
+      padding: 0;
+      line-height: 1;
+      transition: opacity 0.15s ease;
     }
     .boto-prev{ left: 12px; }
     .boto-next{ right: 12px; }
 
     .boto-next:hover,
     .boto-prev:hover{
-      background: rgba(255,255,255,0.34);
+      background: transparent; /* ✅ still no circle */
+      opacity: 0.7;
       cursor: pointer;
     }
+
     button:focus{ outline: none; }
     button::-moz-focus-inner{ border: 0; padding: 0; }
   </style>
@@ -166,7 +170,7 @@
       'July','August','September','October','November','December'
     ];
 
-    // ✅ S M T W T F S, Sunday-first
+    // S M T W T F S, Sunday-first
     var dies_abr = ['S','M','T','W','T','F','S'];
 
     Number.prototype.pad = function(num) {
@@ -217,7 +221,7 @@
 
       titol.appendChild(boto_prev);
 
-      // ✅ year beside month
+      // year beside month
       titol.appendChild(document.createElement('span')).innerHTML =
         mesos[data.getMonth()] + '<span class="any">' + data.getFullYear() + '</span>';
 
