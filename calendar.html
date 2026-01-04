@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calendar</title>
+
+  <style>
+    :root{
+      /* Soft pink / girly Notion theme */
+      --font: Arial, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+      --surface: #ffffff;
+      --text: #2b2b2b;
+      --border: rgba(0,0,0,0.08);
+      --cell-alt: rgba(0,0,0,0.02);
+
+      --accent: #ff6fae;      /* header background + today */
+      --accent-2: #ff8fbe;    /* hover */
+      --on-accent: #ffffff;
+
+      --weekend: #ff3d8d;     /* Sat/Sun day numbers */
+      --outside-month: 0.25;
+
+      --radius: 16px;
+      --shadow: 0 10px 28px rgba(255, 111, 174, 0.22);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: transparent; /* nicer in Notion embeds */
+      color: var(--text);
+    }
+
+    #calendari{
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 8px;
+    }
+
+    table{
+      border-collapse: collapse;
+      table-layout: fixed;
+      width: 340px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    td, th{
+      text-align: center;
+      background: var(--surface);
+    }
+
+    /* Month + year header */
+    tr:first-child th{
+      font-size: 18px;
+      font-weight: 700;
+      padding: 14px 44px;
+      border: none;
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+
+    th .any{
+      font-size: 12px;
+      font-weight: 600;
+      display: block;
+      opacity: 0.9;
+      color: rgba(255,255,255,0.9);
+      margin-top: 2px;
+    }
+
+    /* Day-of-week row */
+    tr:nth-child(2) th{
+      padding: 10px 0;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      border-top: 1px solid rgba(255,255,255,0.18);
+      border-right: 1px solid rgba(255,255,255,0.12);
+      background: var(--accent);
+      color: rgba(255,255,255,0.95);
+    }
+    tr:nth-child(2) th:last-child { border-right: none; }
+
+    td{
+      padding: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td > span{
+      display: block;
+      padding: 12px 0;
+      color: var(--text);
+      border: 2px solid transparent;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.05s ease;
+      border-radius: 10px;
+      margin: 4px;
+    }
+
+    td:nth-child(even) > span{
+      background: var(--cell-alt);
+    }
+
+    /* Weekend columns NOW: Sunday = 1st column, Saturday = 7th column */
+    td:first-child > span,     /* Sunday */
+    td:last-child > span {     /* Saturday */
+      color: var(--weekend);
+      font-weight: 700;
+    }
+
+    /* Today */
+    td.avui > span{
+      background: var(--accent);
+      color: var(--on-accent);
+      font-weight: 800;
+      border-color: rgba(0,0,0,0.10);
+    }
+
+    /* Outside month */
+    td.fora > span{
+      opacity: var(--outside-month);
+    }
+
+    td > span:hover{
+      background: var(--accent-2);
+      color: var(--on-accent);
+      cursor: pointer;
+    }
+    td > span:active{
+      transform: scale(0.98);
+    }
+
+    /* Nav buttons */
+    .boto-next, .boto-prev{
+      background: rgba(255,255,255,0.20);
+      color: var(--on-accent);
+      border: none;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 900;
+      height: 30px;
+      width: 30px;
+      border-radius: 999px;
+      position: absolute;
+      top: 12px;
+      display: grid;
+      place-items: center;
+      transition: background 0.15s ease;
+    }
+    .boto-prev{ left: 12px; }
+    .boto-next{ right: 12px; }
+
+    .boto-next:hover,
+    .boto-prev:hover{
+      background: rgba(255,255,255,0.30);
+      cursor: pointer;
+    }
+    button:focus{ outline: none; }
+    button::-moz-focus-inner{ border: 0; padding: 0; }
+  </style>
+</head>
+
+<body>
+  <div id="calendari"></div>
+
+  <script>
+    var mesos = [
+      'January','February','March','April','May','June',
+      'July','August','September','October','November','December'
+    ];
+
+    // Header labels: S M T W T F S (Sunday-first)
+    var dies_abr = ['S','M','T','W','T','F','S'];
+
+    Number.prototype.pad = function(num) {
+      var str = '';
+      for (var i = 0; i < (num - this.toString().length); i++) str += '0';
+      return str += this.toString();
+    };
+
+    function calendari(widget, data) {
+      var original = widget.getElementsByClassName('actiu')[0];
+
+      if (typeof original === 'undefined') {
+        original = document.createElement('table');
+        original.setAttribute('data-actual',
+          data.getFullYear() + '/' +
+          data.getMonth().pad(2) + '/' +
+          data.getDate().pad(2)
+        );
+        widget.appendChild(original);
+      }
+
+      var diff = data - new Date(original.getAttribute('data-actual'));
+      diff = new Date(diff).getMonth();
+
+      var e = document.createElement('table');
+      e.className = diff === 0 ? 'amagat-esquerra' : 'amagat-dreta';
+      e.innerHTML = '';
+      widget.appendChild(e);
+
+      e.setAttribute('data-actual',
+        data.getFullYear() + '/' +
+        data.getMonth().pad(2) + '/' +
+        data.getDate().pad(2)
+      );
+
+      // Title row
+      var fila = document.createElement('tr');
+      var titol = document.createElement('th');
+      titol.setAttribute('colspan', 7);
+
+      var boto_prev = document.createElement('button');
+      boto_prev.className = 'boto-prev';
+      boto_prev.innerHTML = '&#9666;';
+
+      var boto_next = document.createElement('button');
+      boto_next.className = 'boto-next';
+      boto_next.innerHTML = '&#9656;';
+
+      titol.appendChild(boto_prev);
+      titol.appendChild(document.createElement('span')).innerHTML =
+        mesos[data.getMonth()] + '<span class="any">' + data.getFullYear() + '</span>';
+      titol.appendChild(boto_next);
+
+      boto_prev.onclick = function() {
+        data.setMonth(data.getMonth() - 1);
+        calendari(widget, data);
+      };
+
+      boto_next.onclick = function() {
+        data.setMonth(data.getMonth() + 1);
+        calendari(widget, data);
+      };
+
+      fila.appendChild(titol);
+      e.appendChild(fila);
+
+      // Day-of-week header row (Sunday -> Saturday)
+      fila = document.createElement('tr');
+      for (var i = 0; i < 7; i++) {
+        fila.innerHTML += '<th>' + dies_abr[i] + '</th>';
+      }
+      e.appendChild(fila);
+
+      /*
+        Fix month start alignment for Sunday-first:
+        We want actual = the Sunday on/before the 1st of the month.
+      */
+      var firstOfMonth = new Date(data.getFullYear(), data.getMonth(), 1);
+      var startDay = firstOfMonth.getDay(); // Sunday=0
+      var actual = new Date(data.getFullYear(), data.getMonth(), 1 - startDay);
+
+      // 6 weeks grid
+      for (var s = 0; s < 6; s++) {
+        var row = document.createElement('tr');
+
+        for (var d = 0; d < 7; d++) {
+          var cell = document.createElement('td');
+          var span = document.createElement('span');
+          cell.appendChild(span);
+
+          span.innerHTML = actual.getDate();
+
+          if (actual.getMonth() !== data.getMonth()) cell.className = 'fora';
+
+          // Today highlight (compare to real today, not "data" which changes month)
+          var today = new Date();
+          if (
+            today.getFullYear() === actual.getFullYear() &&
+            today.getMonth() === actual.getMonth() &&
+            today.getDate() === actual.getDate()
+          ) {
+            cell.className = 'avui';
+          }
+
+          actual.setDate(actual.getDate() + 1);
+          row.appendChild(cell);
+        }
+
+        e.appendChild(row);
+      }
+
+      setTimeout(function() {
+        e.className = 'actiu';
+        original.className += diff === 0 ? ' amagat-dreta' : ' amagat-esquerra';
+      }, 20);
+
+      original.className = 'inactiu';
+
+      setTimeout(function() {
+        var inactius = document.getElementsByClassName('inactiu');
+        for (var i = 0; i < inactius.length; i++) widget.removeChild(inactius[i]);
+      }, 1000);
+    }
+
+    calendari(document.getElementById('calendari'), new Date());
+  </script>
+</body>
+</html>
