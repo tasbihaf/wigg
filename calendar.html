@@ -11,14 +11,15 @@
 
       --surface: #ffffff;
 
-      /* Color palette */
-      --brown: #6b3f2a;        /* dates + arrows */
-      --pink-header: #f7c6d9;  /* pastel header */
-      --pink-hover: #f3b8d0;   /* hover */
-      --pink-today: #f7c6d9;   /* today bg */
+      /* Palette */
+      --pink-header: #f7c6d9;
+      --pink-hover: #f3b8d0;
+      --pink-today: #f7c6d9;
 
       --white: #ffffff;
-      --muted: #9ca3af;
+      --brown: #6b3f2a;     /* weekday letters */
+      --grey: #9ca3af;      /* date numbers */
+      --muted: #c4c4c4;
 
       --outside-month: 0.25;
       --radius: 16px;
@@ -30,7 +31,7 @@
       margin: 0;
       font-family: var(--font);
       background: transparent;
-      color: var(--brown);
+      color: var(--grey);
     }
 
     #calendari{
@@ -61,7 +62,7 @@
       font-weight: 700;
       padding: 12px 40px;
       background: var(--pink-header);
-      color: var(--white); /* ✅ month + year white */
+      color: var(--white); /* month + year white */
       position: relative;
     }
 
@@ -70,7 +71,7 @@
       font-size: 18px;
       font-weight: 700;
       margin-left: 8px;
-      color: var(--white); /* ✅ year white */
+      color: var(--white);
     }
 
     /* Weekday row */
@@ -80,7 +81,7 @@
       font-weight: 700;
       letter-spacing: 0.06em;
       background: var(--surface);
-      color: var(--muted);
+      color: var(--brown); /* ✅ weekday letters brown */
     }
 
     /* Date cells */
@@ -89,7 +90,7 @@
       padding: 8px 0;
       margin: 2px;
       border-radius: 10px;
-      color: var(--brown); /* ✅ all dates brown */
+      color: var(--grey); /* ✅ dates grey */
       transition: background 0.15s ease, color 0.15s ease;
       line-height: 1;
     }
@@ -97,7 +98,7 @@
     /* Today */
     td.avui > span{
       background: var(--pink-today);
-      color: var(--white); /* ✅ today white */
+      color: var(--white); /* today white */
       font-weight: 800;
     }
 
@@ -108,14 +109,14 @@
 
     td > span:hover{
       background: var(--pink-hover);
-      color: var(--brown);
+      color: var(--grey);
       cursor: pointer;
     }
 
     /* Nav arrows */
     .boto-next, .boto-prev{
       background: transparent;
-      color: var(--white); /* ✅ arrows white */
+      color: var(--white); /* arrows white */
       border: none;
       font-family: inherit;
       font-size: 18px;
@@ -152,89 +153,73 @@
 
     var dies_abr = ['S','M','T','W','T','F','S'];
 
-    Number.prototype.pad = function(num) {
-      var str = '';
-      for (var i = 0; i < (num - this.toString().length); i++) str += '0';
-      return str += this.toString();
-    };
-
     function calendari(widget, data) {
-      var original = widget.getElementsByClassName('actiu')[0];
-
-      if (!original) {
-        original = document.createElement('table');
-        widget.appendChild(original);
-      }
-
-      var e = document.createElement('table');
       widget.innerHTML = '';
-      widget.appendChild(e);
+      var table = document.createElement('table');
+      widget.appendChild(table);
 
       // Header
-      var fila = document.createElement('tr');
-      var titol = document.createElement('th');
-      titol.colSpan = 7;
+      var row = document.createElement('tr');
+      var th = document.createElement('th');
+      th.colSpan = 7;
 
-      var boto_prev = document.createElement('button');
-      boto_prev.className = 'boto-prev';
-      boto_prev.innerHTML = '&#9666;';
+      var prev = document.createElement('button');
+      prev.className = 'boto-prev';
+      prev.innerHTML = '&#9666;';
 
-      var boto_next = document.createElement('button');
-      boto_next.className = 'boto-next';
-      boto_next.innerHTML = '&#9656;';
+      var next = document.createElement('button');
+      next.className = 'boto-next';
+      next.innerHTML = '&#9656;';
 
-      titol.appendChild(boto_prev);
-      titol.innerHTML += mesos[data.getMonth()] +
+      th.appendChild(prev);
+      th.innerHTML += mesos[data.getMonth()] +
         '<span class="any">' + data.getFullYear() + '</span>';
-      titol.appendChild(boto_next);
+      th.appendChild(next);
 
-      boto_prev.onclick = () => {
+      prev.onclick = () => {
         data.setMonth(data.getMonth() - 1);
         calendari(widget, data);
       };
-      boto_next.onclick = () => {
+      next.onclick = () => {
         data.setMonth(data.getMonth() + 1);
         calendari(widget, data);
       };
 
-      fila.appendChild(titol);
-      e.appendChild(fila);
+      row.appendChild(th);
+      table.appendChild(row);
 
       // Weekdays
-      fila = document.createElement('tr');
-      for (var i = 0; i < 7; i++) fila.innerHTML += '<th>' + dies_abr[i] + '</th>';
-      e.appendChild(fila);
+      row = document.createElement('tr');
+      for (var i = 0; i < 7; i++) row.innerHTML += '<th>' + dies_abr[i] + '</th>';
+      table.appendChild(row);
 
       // Dates
-      var firstOfMonth = new Date(data.getFullYear(), data.getMonth(), 1);
-      var startDay = firstOfMonth.getDay();
-      var actual = new Date(data.getFullYear(), data.getMonth(), 1 - startDay);
+      var first = new Date(data.getFullYear(), data.getMonth(), 1);
+      var start = first.getDay();
+      var current = new Date(data.getFullYear(), data.getMonth(), 1 - start);
+      var today = new Date();
 
-      for (var s = 0; s < 6; s++) {
-        var row = document.createElement('tr');
-
+      for (var w = 0; w < 6; w++) {
+        var r = document.createElement('tr');
         for (var d = 0; d < 7; d++) {
-          var cell = document.createElement('td');
+          var td = document.createElement('td');
           var span = document.createElement('span');
-          span.innerHTML = actual.getDate();
+          span.textContent = current.getDate();
 
-          if (actual.getMonth() !== data.getMonth()) cell.className = 'fora';
-
-          var today = new Date();
+          if (current.getMonth() !== data.getMonth()) td.className = 'fora';
           if (
-            today.getFullYear() === actual.getFullYear() &&
-            today.getMonth() === actual.getMonth() &&
-            today.getDate() === actual.getDate()
+            current.getFullYear() === today.getFullYear() &&
+            current.getMonth() === today.getMonth() &&
+            current.getDate() === today.getDate()
           ) {
-            cell.className = 'avui';
+            td.className = 'avui';
           }
 
-          cell.appendChild(span);
-          row.appendChild(cell);
-          actual.setDate(actual.getDate() + 1);
+          td.appendChild(span);
+          r.appendChild(td);
+          current.setDate(current.getDate() + 1);
         }
-
-        e.appendChild(row);
+        table.appendChild(r);
       }
     }
 
